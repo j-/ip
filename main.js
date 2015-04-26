@@ -4,6 +4,7 @@ var InputView = ok.$View.extend({
 	init: function () {
 		this.sup('init');
 		_.bindAll(this, 'updateValue');
+		this.listenTo(this.watch, 'change', this.showValue, this);
 	},
 	setElement: function () {
 		this.sup('setElement', arguments);
@@ -15,13 +16,15 @@ var InputView = ok.$View.extend({
 	setValue: function (value) {
 		this.watch.set(value);
 	},
+	showValue: function () {
+		this.$el.val(this.watch.get());
+	},
 	updateValue: function () {
 		var value = this.getValue().replace(/\s+|\s+/g, '');
 		this.setValue(value);
 	},
 	start: function () {
 		this.sup('start');
-		this.updateValue();
 		this.$el.on('keypress', this.updateValue);
 		this.$el.on('keyup', this.updateValue);
 	},
@@ -155,11 +158,33 @@ var OutputView = ok.$View.extend({
 	}
 });
 
+var ValueStore = ok.Controller.extend({
+	key: 'latest-value',
+	init: function (options) {
+		this.watch = options.watch;
+		this.listenTo(this.watch, 'change', this.saveValue, this);
+	},
+	loadValue: function () {
+		var value = localStorage.getItem(this.key);
+		if (value) {
+			this.watch.set(value);
+		}
+	},
+	saveValue: function () {
+		var value = this.watch.get();
+		localStorage.setItem(this.key, value);
+	}
+});
+
 var App = ok.Controller.extend({
 	init: function (options) {
 		// initialize properties
 		this.inputValue = ok.Property.create();
 		this.ip = ok.Property.create();
+		// initialize other controllers
+		this.valueStore = ValueStore.create({
+			watch: this.inputValue
+		});
 		// initialize views
 		this.inputView = InputView.create({
 			watch: this.inputValue
@@ -184,6 +209,7 @@ var App = ok.Controller.extend({
 		this.inputView.start();
 		this.outputView.start();
 		this.readInput();
+		this.valueStore.loadValue();
 	}
 });
 
