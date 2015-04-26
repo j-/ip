@@ -21,6 +21,7 @@ var InputView = ok.$View.extend({
 	},
 	start: function () {
 		this.sup('start');
+		this.updateValue();
 		this.$el.on('keypress', this.updateValue);
 		this.$el.on('keyup', this.updateValue);
 	},
