@@ -121,7 +121,7 @@ var App = ok.Controller.extend({
 	init: function (options) {
 		// initialize properties
 		this.inputValue = ok.Property.create();
-		this.ip = ok.Property.create(new IP('127.0.0.1'));
+		this.ip = ok.Property.create();
 		// initialize views
 		this.inputView = InputView.create({
 			watch: this.inputValue
