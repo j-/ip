@@ -35,21 +35,24 @@ var InputView = ok.$View.extend({
 var ValueView = ok.$View.extend({
 	init: function () {
 		this.listenTo(this.watch, 'change', this.handleChange, this);
-		this.updateValue(this.watch);
 	},
 	handleChange: function (prop, ip) {
 		var valid = ip.isValid();
+		var value = this.format(ip);
 		this.toggleValid(valid);
 		if (valid) {
-			this.updateValue(ip);
+			this.updateValue(value);
 		}
 	},
 	toggleValid: function (valid) {
 		this.$el.toggleClass('is-invalid', !valid);
 	},
-	updateValue: function (ip) {
-		var formatted = this.format(ip);
-		this.$el.text(formatted).attr('href', 'http://' + formatted);
+	updateValue: function (formatted) {
+		this.$el.text(formatted);
+	},
+	render: function () {
+		this.sup('render');
+		this.updateValue(this.watch.get());
 	},
 	// virtual
 	format: function () {
@@ -57,37 +60,44 @@ var ValueView = ok.$View.extend({
 	}
 });
 
-var DottedOctalView = ValueView.extend({
+var ValueLinkView = ValueView.extend({
+	updateValue: function (formatted) {
+		this.sup('updateValue', arguments);
+		this.$el.attr('href', 'http://' + formatted);
+	}
+});
+
+var DottedOctalView = ValueLinkView.extend({
 	format: function (ip) {
 		return IP.format(ip, 8);
 	}
 });
 
-var DottedDecimalView = ValueView.extend({
+var DottedDecimalView = ValueLinkView.extend({
 	format: function (ip) {
 		return IP.format(ip, 10);
 	}
 });
 
-var DottedHexadecimalView = ValueView.extend({
+var DottedHexadecimalView = ValueLinkView.extend({
 	format: function (ip) {
 		return IP.format(ip, 16);
 	}
 });
 
-var FlatOctalView = ValueView.extend({
+var FlatOctalView = ValueLinkView.extend({
 	format: function (ip) {
 		return IP.formatPart(ip, 8);
 	}
 });
 
-var FlatDecimalView = ValueView.extend({
+var FlatDecimalView = ValueLinkView.extend({
 	format: function (ip) {
 		return IP.formatPart(ip, 10);
 	}
 });
 
-var FlatHexadecimalView = ValueView.extend({
+var FlatHexadecimalView = ValueLinkView.extend({
 	format: function (ip) {
 		return IP.formatPart(ip, 16);
 	}
@@ -96,12 +106,12 @@ var FlatHexadecimalView = ValueView.extend({
 var OutputView = ok.$View.extend({
 	init: function () {
 		var options = { watch: this.watch };
-		this.dottedOctalView = DottedOctalView.create(options);
-		this.dottedDecimalView = DottedDecimalView.create(options);
-		this.dottedHexadecimalView = DottedHexadecimalView.create(options);
-		this.flatOctalView = FlatOctalView.create(options);
-		this.flatDecimalView = FlatDecimalView.create(options);
-		this.flatHexadecimalView = FlatHexadecimalView.create(options);
+		this.dottedOctalView = this.addChildView(DottedOctalView, options);
+		this.dottedDecimalView = this.addChildView(DottedDecimalView, options);
+		this.dottedHexadecimalView = this.addChildView(DottedHexadecimalView, options);
+		this.flatOctalView = this.addChildView(FlatOctalView, options);
+		this.flatDecimalView = this.addChildView(FlatDecimalView, options);
+		this.flatHexadecimalView = this.addChildView(FlatHexadecimalView, options);
 	},
 	setElement: function (el) {
 		var hasElement = this.el;
