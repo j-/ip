@@ -35,6 +35,33 @@ var InputView = ok.$View.extend({
 	}
 });
 
+var ActionsView = ok.$View.extend({
+	init: function (options) {
+		_.bindAll(this, 'loadPublicIP');
+		this.inputValue = options.inputValue;
+	},
+	setInputValue: function (val) {
+		this.inputValue.set(val);
+	},
+	loadPublicIP: function () {
+		var context = this;
+		this.$('.action-public-ip').button('loading');
+		$.get('http://ipinfo.io', function (response) {
+			var ip = response.ip;
+			context.$('.action-public-ip').button('reset');
+			context.setInputValue(ip);
+		}, 'jsonp');
+	},
+	start: function () {
+		this.sup('start');
+		this.$el.on('click', '.action-public-ip', this.loadPublicIP);
+	},
+	stop: function () {
+		this.sup('stop');
+		this.$el.off('click', '.action-public-ip', this.loadPublicIP);
+	}
+});
+
 var ValueView = ok.$View.extend({
 	init: function () {
 		this.listenTo(this.watch, 'change', this.handleChange, this);
@@ -189,6 +216,9 @@ var App = ok.Controller.extend({
 		this.inputView = InputView.create({
 			watch: this.inputValue
 		});
+		this.actionsView = ActionsView.create({
+			inputValue: this.inputValue
+		});
 		this.outputView = OutputView.create({
 			watch: this.ip
 		});
@@ -209,8 +239,10 @@ var App = ok.Controller.extend({
 	start: function () {
 		this.inputView.render();
 		this.outputView.render();
+		this.actionsView.render();
 		this.inputView.start();
 		this.outputView.start();
+		this.actionsView.start();
 		this.readInput();
 		this.valueStore.loadValue();
 	}
@@ -220,6 +252,7 @@ var app = App.create();
 
 $(function () {
 	app.inputView.setElement($('#input'));
+	app.actionsView.setElement($('#actions'));
 	app.outputView.setElement($('#output'));
 	app.start();
 });
