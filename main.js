@@ -133,9 +133,9 @@ var App = ok.Controller.extend({
 		this.listenTo(this.inputValue, 'change', this.handleChange, this);
 	},
 	handleChange: function () {
-		this.updateValue();
+		this.readInput();
 	},
-	updateValue: function () {
+	readInput: function () {
 		var val = this.inputValue.get();
 		var ip = new IP(val);
 		this.ip.set(ip);
@@ -145,7 +145,7 @@ var App = ok.Controller.extend({
 		this.outputView.render();
 		this.inputView.start();
 		this.outputView.start();
-		this.updateValue();
+		this.readInput();
 	}
 });
 
