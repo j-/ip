@@ -37,12 +37,8 @@ var ValueView = ok.$View.extend({
 		this.listenTo(this.watch, 'change', this.handleChange, this);
 	},
 	handleChange: function (prop, ip) {
-		var valid = ip.isValid();
 		var value = this.format(ip);
-		this.toggleValid(valid);
-		if (valid) {
-			this.updateValue(value);
-		}
+		this.updateValue(value);
 	},
 	toggleValid: function (valid) {
 		this.$el.toggleClass('is-invalid', !valid);
@@ -61,6 +57,14 @@ var ValueView = ok.$View.extend({
 });
 
 var ValueLinkView = ValueView.extend({
+	handleChange: function (prop, ip) {
+		var valid = ip.isValid();
+		var value = this.format(ip);
+		this.toggleValid(valid);
+		if (valid) {
+			this.updateValue(value);
+		}
+	},
 	updateValue: function (formatted) {
 		this.sup('updateValue', arguments);
 		this.$el.attr('href', 'http://' + formatted);
@@ -103,6 +107,25 @@ var FlatHexadecimalView = ValueLinkView.extend({
 	}
 });
 
+var IsValidView = ValueView.extend({
+	format: function (ip) {
+		var valid = IP.isValid(ip);
+		return valid ? 'yes' : 'no';
+	},
+	updateValue: function (formatted) {
+		this.sup('updateValue', arguments);
+		var valid = IP.isValid(this.watch.get());
+		this.$el.toggleClass('text-success', valid);
+		this.$el.toggleClass('text-danger', !valid);
+	}
+});
+
+var ClassView = ValueView.extend({
+	format: function (ip) {
+		return IP.getClass(ip);
+	}
+});
+
 var OutputView = ok.$View.extend({
 	init: function () {
 		var options = { watch: this.watch };
@@ -112,6 +135,8 @@ var OutputView = ok.$View.extend({
 		this.flatOctalView = this.addChildView(FlatOctalView, options);
 		this.flatDecimalView = this.addChildView(FlatDecimalView, options);
 		this.flatHexadecimalView = this.addChildView(FlatHexadecimalView, options);
+		this.isValidView = this.addChildView(IsValidView, options);
+		this.classView = this.addChildView(ClassView, options);
 	},
 	setElement: function (el) {
 		var hasElement = this.el;
@@ -125,6 +150,8 @@ var OutputView = ok.$View.extend({
 		this.flatOctalView.setElement(this.$('.output-flat-octal'));
 		this.flatDecimalView.setElement(this.$('.output-flat-decimal'));
 		this.flatHexadecimalView.setElement(this.$('.output-flat-hexadecimal'));
+		this.isValidView.setElement(this.$('.output-is-valid'));
+		this.classView.setElement(this.$('.output-class'));
 	}
 });
 
