@@ -31,71 +31,89 @@ var InputView = ok.$View.extend({
 	}
 });
 
-var OutputView = ok.$View.extend({
-	update: function (prop, ip) {
+var ValueView = ok.$View.extend({
+	init: function () {
+		this.listenTo(this.watch, 'change', this.handleChange, this);
+		this.updateValue(this.watch);
+	},
+	handleChange: function (prop, ip) {
 		var valid = ip.isValid();
-		this.updateDottedDecimal(ip, valid);
-		this.updateDottedOctal(ip, valid);
-		this.updateDottedHexadecimal(ip, valid);
-		this.updateFlatDecimal(ip, valid);
-		this.updateFlatOctal(ip, valid);
-		this.updateFlatHexadecimal(ip, valid);
-	},
-	updateDottedDecimal: function (ip, valid) {
-		var value = IP.format(ip, 10);
-		var $output = this.$('.output-dotted-decimal')
-			.toggleClass('is-invalid', !valid);
+		this.toggleValid(valid);
 		if (valid) {
-			$output.text(value).attr('href', 'http://' + value);
+			this.updateValue(ip);
 		}
 	},
-	updateDottedOctal: function (ip, valid) {
-		var value = IP.format(ip, 8);
-		var $output = this.$('.output-dotted-octal')
-			.toggleClass('is-invalid', !valid);
-		if (valid) {
-			$output.text(value).attr('href', 'http://' + value);
+	toggleValid: function (valid) {
+		this.$el.toggleClass('is-invalid', !valid);
+	},
+	updateValue: function (ip) {
+		var formatted = this.format(ip);
+		this.$el.text(formatted).attr('href', 'http://' + formatted);
+	},
+	// virtual
+	format: function () {
+		return null;
+	}
+});
+
+var DottedOctalView = ValueView.extend({
+	format: function (ip) {
+		return IP.format(ip, 8);
+	}
+});
+
+var DottedDecimalView = ValueView.extend({
+	format: function (ip) {
+		return IP.format(ip, 10);
+	}
+});
+
+var DottedHexadecimalView = ValueView.extend({
+	format: function (ip) {
+		return IP.format(ip, 16);
+	}
+});
+
+var FlatOctalView = ValueView.extend({
+	format: function (ip) {
+		return IP.formatPart(ip, 8);
+	}
+});
+
+var FlatDecimalView = ValueView.extend({
+	format: function (ip) {
+		return IP.formatPart(ip, 10);
+	}
+});
+
+var FlatHexadecimalView = ValueView.extend({
+	format: function (ip) {
+		return IP.formatPart(ip, 16);
+	}
+});
+
+var OutputView = ok.$View.extend({
+	init: function () {
+		var options = { watch: this.watch };
+		this.dottedOctalView = DottedOctalView.create(options);
+		this.dottedDecimalView = DottedDecimalView.create(options);
+		this.dottedHexadecimalView = DottedHexadecimalView.create(options);
+		this.flatOctalView = FlatOctalView.create(options);
+		this.flatDecimalView = FlatDecimalView.create(options);
+		this.flatHexadecimalView = FlatHexadecimalView.create(options);
+	},
+	setElement: function (el) {
+		var hasElement = this.el;
+		this.sup('setElement', [el]);
+		if (!hasElement) {
+			return;
 		}
-	},
-	updateDottedHexadecimal: function (ip, valid) {
-		var value = IP.format(ip, 16);
-		var $output = this.$('.output-dotted-hexadecimal')
-			.toggleClass('is-invalid', !valid);
-		if (valid) {
-			$output.text(value).attr('href', 'http://' + value);
-		}
-	},
-	updateFlatDecimal: function (ip, valid) {
-		var value = IP.formatPart(ip, 10);
-		var $output = this.$('.output-flat-decimal')
-			.toggleClass('is-invalid', !valid);
-		if (valid) {
-			$output.text(value).attr('href', 'http://' + value);
-		}
-	},
-	updateFlatOctal: function (ip, valid) {
-		var value = IP.formatPart(ip, 8);
-		var $output = this.$('.output-flat-octal')
-			.toggleClass('is-invalid', !valid);
-		if (valid) {
-			$output.text(value).attr('href', 'http://' + value);
-		}
-	},
-	updateFlatHexadecimal: function (ip, valid) {
-		var value = IP.formatPart(ip, 16);
-		var $output = this.$('.output-flat-hexadecimal')
-			.toggleClass('is-invalid', !valid);
-		if (valid) {
-			$output.text(value).attr('href', 'http://' + value);
-		}
-	},
-	start: function () {
-		this.sup('start');
-		this.listenTo(this.watch, 'change', this.update, this);
-	},
-	stop: function () {
-		this.sup('stop');
-		this.stopListening(this.watch, 'change', this.update, this);
+		this.dottedOctalView.setElement(this.$('.output-dotted-octal'));
+		this.dottedDecimalView.setElement(this.$('.output-dotted-decimal'));
+		this.dottedHexadecimalView.setElement(this.$('.output-dotted-hexadecimal'));
+		this.flatOctalView.setElement(this.$('.output-flat-octal'));
+		this.flatDecimalView.setElement(this.$('.output-flat-decimal'));
+		this.flatHexadecimalView.setElement(this.$('.output-flat-hexadecimal'));
 	}
 });
 
