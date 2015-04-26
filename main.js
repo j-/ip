@@ -20,7 +20,7 @@ var InputView = ok.$View.extend({
 		this.$el.val(this.watch.get());
 	},
 	updateValue: function () {
-		var value = this.getValue().replace(/\s+|\s+/g, '');
+		var value = this.getValue();
 		this.setValue(value);
 	},
 	start: function () {
@@ -200,6 +200,9 @@ var App = ok.Controller.extend({
 	},
 	readInput: function () {
 		var val = this.inputValue.get();
+		if (typeof val === 'string') {
+			val = val.replace(/\s+|\s+/g, '');
+		}
 		var ip = new IP(val);
 		this.ip.set(ip);
 	},
