@@ -13,7 +13,7 @@ var InputView = ok.$View.extend({
 		return this.$el.val();
 	},
 	setValue: function (value) {
-		this.watch.inputValue.set(value);
+		this.watch.set(value);
 	},
 	updateValue: function () {
 		var value = this.getValue().replace(/\s+|\s+/g, '');
@@ -91,18 +91,27 @@ var OutputView = ok.$View.extend({
 	},
 	start: function () {
 		this.sup('start');
-		this.listenTo(this.watch.ip, 'change', this.update, this);
+		this.listenTo(this.watch, 'change', this.update, this);
 	},
 	stop: function () {
 		this.sup('stop');
-		this.stopListening(this.watch.ip, 'change', this.update, this);
+		this.stopListening(this.watch, 'change', this.update, this);
 	}
 });
 
 var App = ok.Controller.extend({
 	init: function (options) {
+		// initialize properties
 		this.inputValue = ok.Property.create();
 		this.ip = ok.Property.create(new IP('127.0.0.1'));
+		// initialize views
+		this.inputView = InputView.create({
+			watch: this.inputValue
+		});
+		this.outputView = OutputView.create({
+			watch: this.ip
+		});
+		// initialize listeners
 		this.listenTo(this.inputValue, 'change', this.handleChange, this);
 	},
 	handleChange: function () {
@@ -114,27 +123,19 @@ var App = ok.Controller.extend({
 		this.ip.set(ip);
 	},
 	start: function () {
+		this.inputView.render();
+		this.outputView.render();
+		this.inputView.start();
+		this.outputView.start();
 		this.updateValue();
 	}
 });
 
 var app = App.create();
 
-var inputView = InputView.create({
-	watch: app
-});
-
-var outputView = OutputView.create({
-	watch: app
-});
-
 $(function () {
-	inputView.setElement($('#input'));
-	outputView.setElement($('#output'));
-	inputView.render();
-	outputView.render();
-	inputView.start();
-	outputView.start();
+	app.inputView.setElement($('#input'));
+	app.outputView.setElement($('#output'));
 	app.start();
 });
 
