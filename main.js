@@ -152,7 +152,24 @@ var IsValidView = ValueView.extend({
 
 var ClassView = ValueView.extend({
 	format: function (ip) {
-		return IP.getClass(ip);
+		var n = IP.getClass(ip);
+		var valid = IP.isValid(ip);
+		return valid ? n : '';
+	}
+});
+
+var ClassRangeView = ValueView.extend({
+	rangeText: {
+		A:   '0.0.0.0\u2014127.255.255.255',
+		B: '128.0.0.0\u2014191.255.255.255',
+		C: '192.0.0.0\u2014223.255.255.255',
+		D: '224.0.0.0\u2014239.255.255.255',
+		E: '240.0.0.0\u2014255.255.255.255'
+	},
+	format: function (ip) {
+		var n = IP.getClass(ip);
+		var valid = IP.isValid(ip);
+		return valid ? this.rangeText[n] : '';
 	}
 });
 
@@ -167,6 +184,7 @@ var OutputView = ok.$View.extend({
 		this.flatHexadecimalView = this.addChildView(FlatHexadecimalView, options);
 		this.isValidView = this.addChildView(IsValidView, options);
 		this.classView = this.addChildView(ClassView, options);
+		this.classRangeView = this.addChildView(ClassRangeView, options);
 	},
 	setElement: function (el) {
 		var hasElement = this.el;
@@ -182,6 +200,7 @@ var OutputView = ok.$View.extend({
 		this.flatHexadecimalView.setElement(this.$('.output-flat-hexadecimal'));
 		this.isValidView.setElement(this.$('.output-is-valid'));
 		this.classView.setElement(this.$('.output-class'));
+		this.classRangeView.setElement(this.$('.output-class-range'));
 	}
 });
 
