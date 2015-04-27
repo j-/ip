@@ -173,6 +173,44 @@ var ClassRangeView = ValueView.extend({
 	}
 });
 
+var LocationView = ok.$View.extend({
+	init: function () {
+		_.bindAll(this, 'showResponse');
+		this.listenTo(this.watch, 'change', this.handleChange, this);
+	},
+	handleChange: function (prop, ip) {
+		var context = this;
+		if (!IP.isValid(ip)) {
+			this.showInvalid();
+			return;
+		}
+		this.showValid();
+		this.showLoading();
+		$.get('http://ipinfo.io/' + IP.format(ip), this.showResponse, 'jsonp');
+	},
+	showInvalid: function () {
+		this.$el.addClass('text-muted');
+	},
+	showValid: function () {
+		this.$el.removeClass('text-muted');
+	},
+	showLoading: function () {
+		this.$el.addClass('text-muted');
+	},
+	showResponse: function (response) {
+		this.$el.removeClass('text-muted');
+		var city = '';
+		if (response.city && response.region && response.country) {
+			city = response.city + ', ' + response.region + ' ' + response.country;
+		}
+		this.$('.output-city').text(city);
+		this.$('.output-hostname').text(response.hostname);
+		this.$('.output-latlon').text(response.loc);
+		this.$('.output-network').text(response.org);
+		this.$('.output-postcode').text(response.postal);
+	}
+});
+
 var OutputView = ok.$View.extend({
 	init: function () {
 		var options = { watch: this.watch };
@@ -185,6 +223,7 @@ var OutputView = ok.$View.extend({
 		this.isValidView = this.addChildView(IsValidView, options);
 		this.classView = this.addChildView(ClassView, options);
 		this.classRangeView = this.addChildView(ClassRangeView, options);
+		this.locationView = this.addChildView(LocationView, options);
 	},
 	setElement: function (el) {
 		var hasElement = this.el;
@@ -201,6 +240,7 @@ var OutputView = ok.$View.extend({
 		this.isValidView.setElement(this.$('.output-is-valid'));
 		this.classView.setElement(this.$('.output-class'));
 		this.classRangeView.setElement(this.$('.output-class-range'));
+		this.locationView.setElement(this.$('.location-details'));
 	}
 });
 
